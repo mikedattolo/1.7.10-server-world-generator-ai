@@ -38,9 +38,10 @@ public class PreparedWorldDataLoader {
     private static int countFeatures(String text) {
         int count = 0;
         int index = 0;
-        while ((index = text.indexOf("\"type\": \"Feature\"", index)) >= 0) {
+        String marker = "\"type\": \"Feature\",";
+        while ((index = text.indexOf(marker, index)) >= 0) {
             count++;
-            index += 10;
+            index += marker.length();
         }
         return count;
     }

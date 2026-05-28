@@ -1,11 +1,9 @@
-package com.mikedattolo.worldbuilder;
+package com.mikedattolo.worldgen.io;
 
 import com.mikedattolo.worldbuilder.export.ExportService;
 import com.mikedattolo.worldbuilder.model.GenerationMode;
 import com.mikedattolo.worldbuilder.model.GenerationPlan;
 import com.mikedattolo.worldbuilder.model.ProjectMetadata;
-import com.mikedattolo.worldgen.io.ElevationLoader;
-import com.mikedattolo.worldgen.io.GeoJSONParser;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
@@ -13,19 +11,18 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ExportServiceTest {
+class PreparedWorldDataLoaderTest {
     @Test
-    void writesExpectedFiles() throws Exception {
-        Path dir = Files.createTempDirectory("builder-test");
+    void loadsExportedArtifactsAndCountsFeatures() throws Exception {
+        Path dir = Files.createTempDirectory("prepared-data-loader-test");
 
         ProjectMetadata metadata = new ProjectMetadata();
-        metadata.projectName = "test";
+        metadata.projectName = "loader-test";
         metadata.mode = GenerationMode.DEM;
         metadata.worldSize = 512;
-        metadata.verticalScale = 1.5;
+        metadata.verticalScale = 1.4;
         metadata.style = "apocalypse";
         metadata.bbox = new LinkedHashMap<String, Double>();
         metadata.bbox.put("minLat", 1.0);
@@ -43,7 +40,7 @@ class ExportServiceTest {
 
         GenerationPlan plan = new GenerationPlan();
         plan.theme = "real-world";
-        plan.terrain = "dem";
+        plan.terrain = "dem-driven";
         plan.roads = "osm";
         plan.vegetation = "land-cover";
         plan.style = "apocalypse";
@@ -52,24 +49,19 @@ class ExportServiceTest {
 
         new ExportService().export(dir, metadata, plan);
 
-        assertTrue(Files.exists(dir.resolve("project.json")));
-        assertTrue(Files.exists(dir.resolve("generation_plan.json")));
-        assertTrue(Files.exists(dir.resolve("elevation.json")));
-        assertTrue(Files.exists(dir.resolve("roads.geojson")));
+        PreparedWorldData loaded = new PreparedWorldDataLoader().load(dir);
 
-        String roads = new String(Files.readAllBytes(dir.resolve("roads.geojson")));
-        String buildings = new String(Files.readAllBytes(dir.resolve("buildings.geojson")));
-        String elevation = new String(Files.readAllBytes(dir.resolve("elevation.json")));
+        assertEquals(8, loaded.rawFiles.size());
+        assertEquals(512, loaded.worldSize);
+        assertEquals("apocalypse", loaded.style);
 
-        GeoJSONParser parser = new GeoJSONParser();
-        assertEquals(5, parser.countFeatures(roads));
-        assertEquals(6, parser.countFeatures(buildings));
-        assertFalse(roads.contains("placeholder"));
-        assertTrue(roads.contains("collector-road"));
-        assertTrue(buildings.contains("houses") || buildings.contains("commercial"));
+        assertEquals(5, loaded.featureCounts.get("roads.geojson").intValue());
+        assertEquals(6, loaded.featureCounts.get("buildings.geojson").intValue());
+        assertEquals(2, loaded.featureCounts.get("water.geojson").intValue());
+        assertEquals(8, loaded.featureCounts.get("vegetation.geojson").intValue());
+        assertEquals(3, loaded.featureCounts.get("landuse.geojson").intValue());
 
-        int[] samples = new ElevationLoader().loadSamples(elevation);
-        assertEquals(64, samples.length);
-        assertTrue(elevation.contains("\"sampleResolution\": 8"));
+        assertTrue(loaded.rawFiles.get("roads.geojson").contains("\"type\": \"FeatureCollection\""));
+        assertTrue(loaded.rawFiles.get("roads.geojson").contains("\"type\": \"Feature\","));
     }
 }

@@ -14,12 +14,12 @@ public class ExportService {
         Files.createDirectories(outputDir);
         write(outputDir.resolve("project.json"), JsonUtil.toJson(metadata));
         write(outputDir.resolve("generation_plan.json"), JsonUtil.toJson(plan));
-        write(outputDir.resolve("elevation.json"), JsonUtil.placeholderElevationJson(metadata.worldSize, metadata.verticalScale));
-        write(outputDir.resolve("roads.geojson"), JsonUtil.placeholderGeoJson("roads"));
-        write(outputDir.resolve("buildings.geojson"), JsonUtil.placeholderGeoJson("buildings"));
-        write(outputDir.resolve("water.geojson"), JsonUtil.placeholderGeoJson("water"));
-        write(outputDir.resolve("vegetation.geojson"), JsonUtil.placeholderGeoJson("vegetation"));
-        write(outputDir.resolve("landuse.geojson"), JsonUtil.placeholderGeoJson("landuse"));
+        write(outputDir.resolve("elevation.json"), JsonUtil.syntheticElevationJson(metadata));
+        write(outputDir.resolve("roads.geojson"), JsonUtil.syntheticRoadsGeoJson(metadata, plan));
+        write(outputDir.resolve("buildings.geojson"), JsonUtil.syntheticBuildingsGeoJson(metadata, plan));
+        write(outputDir.resolve("water.geojson"), JsonUtil.syntheticWaterGeoJson(metadata, plan));
+        write(outputDir.resolve("vegetation.geojson"), JsonUtil.syntheticVegetationGeoJson(metadata, plan));
+        write(outputDir.resolve("landuse.geojson"), JsonUtil.syntheticLanduseGeoJson(metadata, plan));
     }
 
     private void write(Path path, String content) throws IOException {

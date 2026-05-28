@@ -1,6 +1,8 @@
 package com.mikedattolo.worldbuilder.model;
 
 public class CLIOptions {
+    public boolean helpRequested;
+    public boolean launchGui;
     public GenerationMode mode;
     public String bbox;
     public String address;

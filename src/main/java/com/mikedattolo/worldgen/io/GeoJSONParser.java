@@ -4,9 +4,10 @@ public class GeoJSONParser {
     public int countFeatures(String geoJsonContent) {
         int count = 0;
         int idx = 0;
-        while ((idx = geoJsonContent.indexOf("\"type\": \"Feature\"", idx)) >= 0) {
+        String marker = "\"type\": \"Feature\",";
+        while ((idx = geoJsonContent.indexOf(marker, idx)) >= 0) {
             count++;
-            idx += 10;
+            idx += marker.length();
         }
         return count;
     }

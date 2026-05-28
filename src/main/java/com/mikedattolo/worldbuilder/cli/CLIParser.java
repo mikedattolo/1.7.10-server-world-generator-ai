@@ -9,15 +9,28 @@ public final class CLIParser {
 
     public static CLIOptions parse(String[] args) {
         CLIOptions options = new CLIOptions();
+        if (args == null || args.length == 0) {
+            options.launchGui = true;
+            return options;
+        }
+
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
             if (!arg.startsWith("--")) {
                 continue;
             }
-            String value = (i + 1) < args.length ? args[++i] : null;
+            if ("--help".equals(arg) || "--gui".equals(arg)) {
+                options.helpRequested = "--help".equals(arg);
+                options.launchGui = "--gui".equals(arg);
+                continue;
+            }
+
+            String value = (i + 1) < args.length ? args[i + 1] : null;
             if (value == null || value.startsWith("--")) {
                 throw new IllegalArgumentException("Missing value for " + arg);
             }
+            i++;
+
             if ("--mode".equals(arg)) {
                 options.mode = GenerationMode.valueOf(value.toUpperCase());
             } else if ("--bbox".equals(arg)) {
@@ -41,6 +54,10 @@ public final class CLIParser {
             } else {
                 throw new IllegalArgumentException("Unknown argument " + arg);
             }
+        }
+
+        if (options.helpRequested || options.launchGui) {
+            return options;
         }
 
         if (options.mode == null) {
