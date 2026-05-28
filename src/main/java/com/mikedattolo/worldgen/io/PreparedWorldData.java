@@ -8,4 +8,5 @@ public class PreparedWorldData {
     public final Map<String, Integer> featureCounts = new HashMap<String, Integer>();
     public int worldSize;
     public String style;
+    public String mode;
 }

@@ -20,4 +20,10 @@ class CLIParserTest {
     void validatesDemInputs() {
         assertThrows(IllegalArgumentException.class, () -> CLIParser.parse(new String[]{"--mode", "DEM"}));
     }
+
+    @Test
+    void allowsPromptValuesStartingWithDashes() {
+        CLIOptions options = CLIParser.parse(new String[]{"--prompt", "--abandoned town"});
+        assertEquals("--abandoned town", options.prompt);
+    }
 }

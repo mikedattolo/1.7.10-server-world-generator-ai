@@ -32,7 +32,7 @@ public class RealWorldMapBuilderApp {
         System.out.println("World size: " + metadata.worldSize + "x" + metadata.worldSize);
         System.out.println("Scale ratio (blocks/degree): " + scaleRatio(metadata));
         System.out.println("Estimated memory usage (rough MB): " + estimateMemoryMb(metadata));
-        System.out.println("Output: " + Path.of(options.output).toAbsolutePath());
+        System.out.println("Output: " + Paths.get(options.output).toAbsolutePath());
     }
 
     private static ProjectMetadata buildMetadata(CLIOptions options) {

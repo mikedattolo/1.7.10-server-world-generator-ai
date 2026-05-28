@@ -16,6 +16,6 @@ public class ChunkSpatialIndex {
     }
 
     private long key(int chunkX, int chunkZ) {
-        return (((long) chunkX) << 32) ^ (chunkZ & 0xffffffffL);
+        return (((long) chunkX) << 32) | (chunkZ & 0xffffffffL);
     }
 }

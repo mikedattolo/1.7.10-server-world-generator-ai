@@ -25,7 +25,7 @@ public final class JsonUtil {
         sb.append(",\n");
         intMap(sb, "estimatedFeatures", m.estimatedFeatures);
         sb.append(",\n");
-        stringArray(sb, "dataSources", m.dataSources);
+        list(sb, "dataSources", m.dataSources);
         sb.append("\n}\n");
         return sb.toString();
     }
@@ -104,12 +104,8 @@ public final class JsonUtil {
         sb.append("]");
     }
 
-    private static void stringArray(StringBuilder sb, String key, String[] values) {
-        list(sb, key, values);
-    }
-
     private static void kv(StringBuilder sb, String key, Object value, boolean quote) {
-        if (sb.charAt(sb.length() - 1) != '\n') {
+        if (sb.length() > 0 && sb.charAt(sb.length() - 1) != '\n') {
             sb.append(",\n");
         }
         sb.append("  \"").append(esc(key)).append("\": ");

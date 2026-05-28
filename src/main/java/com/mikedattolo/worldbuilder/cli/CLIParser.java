@@ -15,7 +15,7 @@ public final class CLIParser {
                 continue;
             }
             String value = (i + 1) < args.length ? args[++i] : null;
-            if (value == null || value.startsWith("--")) {
+            if (value == null) {
                 throw new IllegalArgumentException("Missing value for " + arg);
             }
             if ("--mode".equals(arg)) {

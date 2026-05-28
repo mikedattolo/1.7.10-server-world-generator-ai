@@ -4,6 +4,9 @@ public final class AddressResolver {
     private AddressResolver() {
     }
 
+    // Placeholder deterministic resolver for offline/no-network preprocessing flows.
+    // It hashes the address into bounded pseudo-coordinates (lat ~20..90, lon ~-130..-70)
+    // and expands that point by radius meters. Replace this with real geocoding in production.
     public static BoundingBox resolveToBoundingBox(String address, int radiusMeters) {
         int hash = Math.abs(address.hashCode());
         double lat = 20.0 + ((hash % 7000) / 100.0);

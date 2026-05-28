@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 
 public class PreparedWorldDataLoader {
     private static final Logger LOGGER = Logger.getLogger(PreparedWorldDataLoader.class.getName());
+    private final GeoJSONParser geoJSONParser = new GeoJSONParser();
     private static final String[] FILES = {
             "project.json", "generation_plan.json", "elevation.json", "roads.geojson", "buildings.geojson",
             "water.geojson", "vegetation.geojson", "landuse.geojson"
@@ -24,25 +25,16 @@ public class PreparedWorldDataLoader {
             String content = new String(Files.readAllBytes(p), StandardCharsets.UTF_8);
             data.rawFiles.put(file, content);
             if (file.endsWith(".geojson")) {
-                data.featureCounts.put(file, countFeatures(content));
+                data.featureCounts.put(file, geoJSONParser.countFeatures(content));
             }
         }
         String project = data.rawFiles.get("project.json");
         if (project != null) {
             data.worldSize = extractInt(project, "worldSize", 2048);
             data.style = extractString(project, "style", "realistic");
+            data.mode = extractString(project, "mode", "DEM");
         }
         return data;
-    }
-
-    private static int countFeatures(String text) {
-        int count = 0;
-        int index = 0;
-        while ((index = text.indexOf("\"type\": \"Feature\"", index)) >= 0) {
-            count++;
-            index += 10;
-        }
-        return count;
     }
 
     private static int extractInt(String json, String key, int defaultValue) {
@@ -57,6 +49,9 @@ public class PreparedWorldDataLoader {
             end++;
         }
         int numStart = end;
+        if (end < json.length() && json.charAt(end) == '-') {
+            end++;
+        }
         while (end < json.length() && Character.isDigit(json.charAt(end))) {
             end++;
         }

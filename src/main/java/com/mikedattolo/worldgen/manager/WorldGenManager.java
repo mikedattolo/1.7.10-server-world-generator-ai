@@ -32,7 +32,13 @@ public class WorldGenManager {
         for (Map.Entry<String, Integer> entry : data.featureCounts.entrySet()) {
             LOGGER.info("Loaded " + entry.getKey() + " features=" + entry.getValue());
         }
-        spatialIndex.indexChunk(0, 0, data.featureCounts.getOrDefault("roads.geojson", 0));
+        int totalRoadFeatures = data.featureCounts.getOrDefault("roads.geojson", 0);
+        int chunksPerAxis = Math.max(1, data.worldSize / 16);
+        for (int i = 0; i < totalRoadFeatures; i++) {
+            int chunkX = i % chunksPerAxis;
+            int chunkZ = (i / chunksPerAxis) % chunksPerAxis;
+            spatialIndex.indexChunk(chunkX, chunkZ, spatialIndex.getFeatureCount(chunkX, chunkZ) + 1);
+        }
     }
 
     public String generateChunk(int chunkX, int chunkZ) {
@@ -43,7 +49,7 @@ public class WorldGenManager {
         if (cached != null) {
             return cached;
         }
-        String result = data.rawFiles.containsKey("generation_plan.json") && data.rawFiles.get("generation_plan.json").contains("\"theme\": \"real-world\"")
+        String result = "DEM".equalsIgnoreCase(data.mode)
                 ? demGenerator.generateChunk(data, spatialIndex, chunkX, chunkZ)
                 : promptGenerator.generateChunk(data, chunkX, chunkZ);
         cache.put(chunkX, chunkZ, result);
