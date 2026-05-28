@@ -52,7 +52,7 @@ The GUI provides a menu-driven desktop workflow for switching between `PROMPT` a
 
 For first-time users, use the **Setup Wizard** button (or **Run > Setup Wizard**) to walk through a guided 6-step configuration with recommended defaults.
 
-For DEM mode, use **Select Area on Map** instead of typing coordinates. Drag a rectangle over the map, choose **Use Selected Area**, and the GUI fills the bbox field automatically.
+For DEM mode, use **Select Area on Map** instead of typing coordinates. Drag a rectangle over the offline map, choose **Use Selected Area**, and the GUI fills the bbox field automatically. The selector does not require OpenStreetMap or any other online map service.
 
 ## Easy Setup And Launch Scripts
 

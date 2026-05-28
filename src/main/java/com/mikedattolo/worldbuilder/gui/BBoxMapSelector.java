@@ -1,12 +1,10 @@
 package com.mikedattolo.worldbuilder.gui;
 
-import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import javax.swing.JTextField;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
@@ -15,7 +13,6 @@ import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
@@ -23,13 +20,7 @@ import java.awt.Window;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
-import java.io.IOException;
-import java.net.URL;
-import java.util.HashSet;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 
 final class BBoxMapSelector extends JDialog {
     private final MapPanel mapPanel;
@@ -111,14 +102,14 @@ final class BBoxMapSelector extends JDialog {
         private static final int TILE_SIZE = 256;
         private static final int MIN_ZOOM = 2;
         private static final int MAX_ZOOM = 16;
-        private static final Color WATER = new Color(200, 221, 235);
-        private static final Color LAND = new Color(225, 226, 212);
+        private static final Color WATER = new Color(195, 216, 230);
+        private static final Color LAND = new Color(224, 226, 210);
+        private static final Color HIGHLAND = new Color(189, 197, 165);
+        private static final Color LOWLAND = new Color(210, 225, 198);
         private static final Color GRID = new Color(112, 126, 135, 80);
         private static final Color SELECT_FILL = new Color(40, 120, 215, 70);
         private static final Color SELECT_STROKE = new Color(30, 100, 200);
 
-        private final Map<String, Image> tileCache = new HashMap<String, Image>();
-        private final Set<String> loadingTiles = new HashSet<String>();
         private int zoom = 5;
         private double centerLat = 39.0;
         private double centerLon = -98.0;
@@ -188,7 +179,7 @@ final class BBoxMapSelector extends JDialog {
             super.paintComponent(g);
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            paintTiles(g2);
+            paintOfflineMap(g2);
             paintGrid(g2);
             paintSelection(g2);
             paintAttribution(g2);
@@ -216,83 +207,69 @@ final class BBoxMapSelector extends JDialog {
             }
         }
 
-        private void paintTiles(Graphics2D g2) {
-            Point2D.Double center = lonLatToGlobal(centerLon, centerLat, zoom);
-            double topLeftX = center.x - getWidth() / 2.0;
-            double topLeftY = center.y - getHeight() / 2.0;
-            int minTileX = (int) Math.floor(topLeftX / TILE_SIZE);
-            int minTileY = (int) Math.floor(topLeftY / TILE_SIZE);
-            int maxTileX = (int) Math.floor((topLeftX + getWidth()) / TILE_SIZE);
-            int maxTileY = (int) Math.floor((topLeftY + getHeight()) / TILE_SIZE);
-            int tileCount = 1 << zoom;
-
-            g2.setColor(LAND);
+        private void paintOfflineMap(Graphics2D g2) {
+            g2.setColor(WATER);
             g2.fillRect(0, 0, getWidth(), getHeight());
 
-            for (int tileX = minTileX; tileX <= maxTileX; tileX++) {
-                for (int tileY = minTileY; tileY <= maxTileY; tileY++) {
-                    if (tileY < 0 || tileY >= tileCount) {
-                        continue;
-                    }
-                    int wrappedTileX = ((tileX % tileCount) + tileCount) % tileCount;
-                    int drawX = (int) Math.round(tileX * TILE_SIZE - topLeftX);
-                    int drawY = (int) Math.round(tileY * TILE_SIZE - topLeftY);
-                    Image image = loadTile(wrappedTileX, tileY);
-                    if (image != null) {
-                        g2.drawImage(image, drawX, drawY, TILE_SIZE, TILE_SIZE, this);
-                    } else {
-                        g2.setColor(tileY % 2 == 0 ? LAND : new Color(216, 222, 206));
-                        g2.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
-                    }
-                }
-            }
+            drawLandmass(g2, -168.0, 7.0, -52.0, 72.0, LOWLAND);
+            drawLandmass(g2, -82.0, -56.0, -34.0, 13.0, LAND);
+            drawLandmass(g2, -18.0, 35.0, 42.0, 72.0, LAND);
+            drawLandmass(g2, -18.0, -35.0, 52.0, 37.0, LOWLAND);
+            drawLandmass(g2, 26.0, 5.0, 180.0, 78.0, LAND);
+            drawLandmass(g2, 110.0, -45.0, 156.0, -10.0, HIGHLAND);
+            drawLandmass(g2, -74.0, 59.0, -12.0, 84.0, new Color(218, 224, 219));
+            drawLandmass(g2, -180.0, -85.0, 180.0, -62.0, new Color(232, 235, 232));
+
+            drawLabel(g2, "North America", 45.0, -105.0);
+            drawLabel(g2, "South America", -18.0, -60.0);
+            drawLabel(g2, "Europe", 52.0, 14.0);
+            drawLabel(g2, "Africa", 3.0, 20.0);
+            drawLabel(g2, "Asia", 45.0, 85.0);
+            drawLabel(g2, "Australia", -25.0, 134.0);
         }
 
-        private Image loadTile(int tileX, int tileY) {
-            String key = zoom + "/" + tileX + "/" + tileY;
-            synchronized (tileCache) {
-                if (tileCache.containsKey(key)) {
-                    return tileCache.get(key);
-                }
-                if (loadingTiles.contains(key)) {
-                    return null;
-                }
-                loadingTiles.add(key);
+        private void drawLandmass(Graphics2D g2, double minLon, double minLat, double maxLon, double maxLat, Color color) {
+            Point2D.Double nw = lonLatToScreen(minLon, maxLat);
+            Point2D.Double se = lonLatToScreen(maxLon, minLat);
+            int x = (int) Math.round(Math.min(nw.x, se.x));
+            int y = (int) Math.round(Math.min(nw.y, se.y));
+            int width = (int) Math.round(Math.abs(se.x - nw.x));
+            int height = (int) Math.round(Math.abs(se.y - nw.y));
+            if (width <= 0 || height <= 0) {
+                return;
             }
+            g2.setColor(color);
+            g2.fillRoundRect(x, y, width, height, Math.max(20, width / 8), Math.max(20, height / 8));
+            g2.setColor(new Color(112, 125, 98, 120));
+            g2.drawRoundRect(x, y, width, height, Math.max(20, width / 8), Math.max(20, height / 8));
+        }
 
-            Thread loader = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    Image image = null;
-                    try {
-                        image = ImageIO.read(new URL("https://tile.openstreetmap.org/" + key + ".png"));
-                    } catch (IOException ignored) {
-                        image = null;
-                    }
-                    synchronized (tileCache) {
-                        loadingTiles.remove(key);
-                        tileCache.put(key, image);
-                    }
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            repaint();
-                        }
-                    });
-                }
-            }, "worldbuilder-map-tile-" + key.replace('/', '-'));
-            loader.setDaemon(true);
-            loader.start();
-            return null;
+        private void drawLabel(Graphics2D g2, String label, double lat, double lon) {
+            Point2D.Double point = lonLatToScreen(lon, lat);
+            if (point.x < 0 || point.y < 0 || point.x > getWidth() || point.y > getHeight()) {
+                return;
+            }
+            g2.setColor(new Color(55, 70, 65, 155));
+            g2.drawString(label, (int) point.x - 32, (int) point.y);
+        }
+
+        private Point2D.Double lonLatToScreen(double lon, double lat) {
+            Point2D.Double center = lonLatToGlobal(centerLon, centerLat, zoom);
+            Point2D.Double global = lonLatToGlobal(lon, lat, zoom);
+            return new Point2D.Double(global.x - center.x + getWidth() / 2.0, global.y - center.y + getHeight() / 2.0);
         }
 
         private void paintGrid(Graphics2D g2) {
             g2.setColor(GRID);
-            for (int x = 0; x < getWidth(); x += 80) {
-                g2.drawLine(x, 0, x, getHeight());
+            for (int lon = -180; lon <= 180; lon += 15) {
+                Point2D.Double top = lonLatToScreen(lon, 84.0);
+                Point2D.Double bottom = lonLatToScreen(lon, -84.0);
+                g2.drawLine((int) Math.round(top.x), (int) Math.round(top.y), (int) Math.round(bottom.x), (int) Math.round(bottom.y));
             }
-            for (int y = 0; y < getHeight(); y += 80) {
-                g2.drawLine(0, y, getWidth(), y);
+            for (int lat = -75; lat <= 75; lat += 15) {
+                Point2D.Double left = lonLatToScreen(-180.0, lat);
+                Point2D.Double right = lonLatToScreen(180.0, lat);
+                g2.drawLine((int) Math.round(left.x), (int) Math.round(left.y), (int) Math.round(right.x), (int) Math.round(right.y));
             }
         }
 
@@ -309,7 +286,7 @@ final class BBoxMapSelector extends JDialog {
         }
 
         private void paintAttribution(Graphics2D g2) {
-            String text = "Map tiles: OpenStreetMap | Drag to select DEM bbox";
+            String text = "Offline map | Drag to select DEM bbox";
             FontMetrics fm = g2.getFontMetrics();
             int width = fm.stringWidth(text) + 12;
             int height = fm.getHeight() + 6;
