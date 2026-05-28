@@ -59,10 +59,22 @@ Windows (`.bat`, auto-installs Java/Maven with winget if missing):
 start-worldbuilder.bat
 ```
 
+Tip: if you run from an existing terminal and do not want the final pause, use:
+
+```bat
+start-worldbuilder.bat --no-wait
+```
+
 Linux/macOS (`.sh`, validates Java/Maven and launches GUI when a desktop display is available):
 
 ```bash
 ./start-worldbuilder.sh
+```
+
+Tip: skip final pause when running from your own terminal:
+
+```bash
+./start-worldbuilder.sh --no-wait
 ```
 
 ## AI Prompt Feature
