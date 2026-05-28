@@ -48,9 +48,11 @@ java -jar target/server-world-generator-ai-1.0.0-SNAPSHOT.jar --prompt "Generate
 java -jar target/server-world-generator-ai-1.0.0-SNAPSHOT.jar --gui
 ```
 
-The GUI provides a menu-driven desktop workflow for switching between `PROMPT` and `DEM` modes, editing generation inputs, previewing AI-inferred plans, and running exports without manually typing CLI flags.
+The GUI provides a menu-driven desktop workflow for switching between `PROMPT` and `DEM` modes, editing generation inputs, selecting DEM areas from a map, improving rough prompts, previewing AI-inferred plans, and running exports without manually typing CLI flags.
 
 For first-time users, use the **Setup Wizard** button (or **Run > Setup Wizard**) to walk through a guided 6-step configuration with recommended defaults.
+
+For DEM mode, use **Select Area on Map** instead of typing coordinates. Drag a rectangle over the map, choose **Use Selected Area**, and the GUI fills the bbox field automatically.
 
 ## Easy Setup And Launch Scripts
 
@@ -88,3 +90,5 @@ Prompt mode now performs richer intent extraction from natural-language prompts,
 - Special feature extraction (`bridge crossings`, `rail line`, `river corridor`, fog behavior)
 
 This logic remains deterministic and local so world generation is reproducible.
+
+The GUI also includes an **Improve Prompt** action that expands rough ideas into more complete generation prompts before previewing the plan.

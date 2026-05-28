@@ -5,6 +5,7 @@ import com.mikedattolo.worldbuilder.model.CLIOptions;
 import com.mikedattolo.worldbuilder.model.GenerationPlan;
 import com.mikedattolo.worldbuilder.model.GenerationMode;
 import com.mikedattolo.worldbuilder.model.ProjectMetadata;
+import com.mikedattolo.worldbuilder.prompt.PromptAssistant;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -46,6 +47,8 @@ public class WorldBuilderGuiApp {
     private final JTextField output;
     private final JTextArea preview;
     private final JTextArea status;
+    private final JButton mapSelectButton;
+    private final JButton improvePromptButton;
     private final JButton setupWizardButton;
     private final JButton applyPresetButton;
     private final JButton previewButton;
@@ -80,6 +83,10 @@ public class WorldBuilderGuiApp {
         verticalScale = new JTextField("1.0", 24);
         style = new JTextField("realistic", 24);
         output = new JTextField("config/worldgen/realworld", 24);
+        mapSelectButton = new JButton("Select Area on Map");
+        mapSelectButton.addActionListener(e -> selectAreaOnMap());
+        improvePromptButton = new JButton("Improve Prompt");
+        improvePromptButton.addActionListener(e -> improvePrompt());
         preview = new JTextArea(10, 60);
         preview.setEditable(false);
         preview.setBorder(BorderFactory.createTitledBorder("Plan Preview"));
@@ -91,8 +98,8 @@ public class WorldBuilderGuiApp {
         addField(form, gbc, row++, "Quick Preset", preset);
         addField(form, gbc, row++, "Mode", mode);
         addField(form, gbc, row++, "Project Name", projectName);
-        addField(form, gbc, row++, "Prompt", new JScrollPane(prompt));
-        addField(form, gbc, row++, "BBox (DEM)", bbox);
+        addField(form, gbc, row++, "Prompt", withButton(new JScrollPane(prompt), improvePromptButton));
+        addField(form, gbc, row++, "BBox (DEM)", withButton(bbox, mapSelectButton));
         addField(form, gbc, row++, "Address (DEM)", address);
         addField(form, gbc, row++, "Radius (meters)", radius);
         addField(form, gbc, row++, "World Size", worldSize);
@@ -154,6 +161,10 @@ public class WorldBuilderGuiApp {
         setupWizard.addActionListener(e -> runSetupWizard());
         JMenuItem previewPlan = new JMenuItem("Preview Plan");
         previewPlan.addActionListener(e -> previewPlan());
+        JMenuItem selectMapArea = new JMenuItem("Select DEM Area on Map");
+        selectMapArea.addActionListener(e -> selectAreaOnMap());
+        JMenuItem improvePrompt = new JMenuItem("Improve Prompt");
+        improvePrompt.addActionListener(e -> improvePrompt());
         JMenuItem generate = new JMenuItem("Generate");
         generate.addActionListener(e -> generate());
         JMenuItem openOutput = new JMenuItem("Open Output Folder");
@@ -168,6 +179,8 @@ public class WorldBuilderGuiApp {
                 "About", JOptionPane.INFORMATION_MESSAGE));
 
         run.add(setupWizard);
+        run.add(selectMapArea);
+        run.add(improvePrompt);
         run.add(previewPlan);
         run.add(generate);
         run.add(openOutput);
@@ -179,6 +192,28 @@ public class WorldBuilderGuiApp {
         bar.add(presets);
         bar.add(help);
         return bar;
+    }
+
+    private void selectAreaOnMap() {
+        String selectedBbox = BBoxMapSelector.choose(frame, bbox.getText().trim());
+        if (selectedBbox == null || selectedBbox.trim().isEmpty()) {
+            return;
+        }
+        mode.setSelectedItem("DEM");
+        bbox.setText(selectedBbox.trim());
+        address.setText("");
+        refreshModeFields();
+        appendStatus("Selected DEM area on map: " + selectedBbox);
+        previewPlan();
+    }
+
+    private void improvePrompt() {
+        mode.setSelectedItem("PROMPT");
+        String improved = new PromptAssistant().improvePrompt(prompt.getText(), style.getText().trim());
+        prompt.setText(improved);
+        refreshModeFields();
+        appendStatus("Prompt improved for style=" + style.getText().trim());
+        previewPlan();
     }
 
     private void runSetupWizard() {
@@ -245,10 +280,12 @@ public class WorldBuilderGuiApp {
             }
             prompt.setText(chosenPrompt.trim());
         } else {
-            String chosenBbox = promptText(
-                    "Step 6 of 6: Enter bbox lat1,lon1,lat2,lon2",
-                    bbox.getText().trim().isEmpty() ? "40.123,-74.123,40.130,-74.115" : bbox.getText().trim());
-            if (chosenBbox == null) {
+            JOptionPane.showMessageDialog(frame,
+                    "Step 6 of 6: Drag a rectangle on the map, then choose Use Selected Area.",
+                    "Setup Wizard",
+                    JOptionPane.INFORMATION_MESSAGE);
+            String chosenBbox = BBoxMapSelector.choose(frame, bbox.getText().trim());
+            if (chosenBbox == null || chosenBbox.trim().isEmpty()) {
                 return;
             }
             bbox.setText(chosenBbox.trim());
@@ -465,6 +502,13 @@ public class WorldBuilderGuiApp {
         gbc.gridx = 1;
         gbc.weightx = 1;
         panel.add(input, gbc);
+    }
+
+    private static JPanel withButton(java.awt.Component input, JButton button) {
+        JPanel panel = new JPanel(new BorderLayout(6, 0));
+        panel.add(input, BorderLayout.CENTER);
+        panel.add(button, BorderLayout.EAST);
+        return panel;
     }
 
     public void show() {
