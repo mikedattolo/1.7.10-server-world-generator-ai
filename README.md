@@ -8,7 +8,7 @@ External-first architecture for Minecraft Forge 1.7.10 world generation:
 ## Build and test
 
 ```bash
-mvn test
+./mvnw test
 ```
 
 ## Quick Start (Easiest)
@@ -18,33 +18,34 @@ mvn test
 - Or run the app with no args and it opens GUI mode:
 
 ```bash
-java -cp target/classes com.mikedattolo.worldbuilder.RealWorldMapBuilderApp
+./mvnw -q -DskipTests package
+java -jar target/server-world-generator-ai-1.0.0-SNAPSHOT.jar
 ```
 
 - Need command help?
 
 ```bash
-java -cp target/classes com.mikedattolo.worldbuilder.RealWorldMapBuilderApp --help
+java -jar target/server-world-generator-ai-1.0.0-SNAPSHOT.jar --help
 ```
 
 ## Run CLI (DEM mode)
 
 ```bash
-mvn -q -DskipTests package
-java -cp target/classes com.mikedattolo.worldbuilder.RealWorldMapBuilderApp --bbox "40.123,-74.123,40.130,-74.115" --size 2048 --verticalScale 1.5 --style apocalypse --output config/worldgen/realworld/
+./mvnw -q -DskipTests package
+java -jar target/server-world-generator-ai-1.0.0-SNAPSHOT.jar --bbox "40.123,-74.123,40.130,-74.115" --size 2048 --verticalScale 1.5 --style apocalypse --output config/worldgen/realworld/
 ```
 
 ## Run CLI (Prompt mode)
 
 ```bash
-java -cp target/classes com.mikedattolo.worldbuilder.RealWorldMapBuilderApp --prompt "Generate an abandoned suburban town with dense woods and a hospital" --style apocalypse --output config/worldgen/prompt/
+java -jar target/server-world-generator-ai-1.0.0-SNAPSHOT.jar --prompt "Generate an abandoned suburban town with dense woods and a hospital" --style apocalypse --output config/worldgen/prompt/
 ```
 
 ## Run GUI Menu
 
 ```bash
-mvn -q -DskipTests package
-java -cp target/classes com.mikedattolo.worldbuilder.gui.WorldBuilderGuiApp
+./mvnw -q -DskipTests package
+java -jar target/server-world-generator-ai-1.0.0-SNAPSHOT.jar --gui
 ```
 
 The GUI provides a menu-driven desktop workflow for switching between `PROMPT` and `DEM` modes, editing generation inputs, previewing AI-inferred plans, and running exports without manually typing CLI flags.
@@ -53,7 +54,7 @@ For first-time users, use the **Setup Wizard** button (or **Run > Setup Wizard**
 
 ## Easy Setup And Launch Scripts
 
-Windows (`.bat`, auto-installs Java/Maven with winget if missing):
+Windows (`.bat`, auto-installs Java JDK with winget if missing and downloads Maven automatically through Maven Wrapper):
 
 ```bat
 start-worldbuilder.bat
@@ -65,7 +66,7 @@ Tip: if you run from an existing terminal and do not want the final pause, use:
 start-worldbuilder.bat --no-wait
 ```
 
-Linux/macOS (`.sh`, validates Java/Maven and launches GUI when a desktop display is available):
+Linux/macOS (`.sh`, validates Java JDK and downloads Maven automatically through Maven Wrapper):
 
 ```bash
 ./start-worldbuilder.sh
