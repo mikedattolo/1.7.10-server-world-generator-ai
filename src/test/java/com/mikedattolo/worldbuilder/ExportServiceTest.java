@@ -56,6 +56,10 @@ class ExportServiceTest {
         assertTrue(Files.exists(dir.resolve("generation_plan.json")));
         assertTrue(Files.exists(dir.resolve("elevation.json")));
         assertTrue(Files.exists(dir.resolve("roads.geojson")));
+        assertTrue(Files.exists(dir.resolve("minecraft_world/session.lock")));
+        assertTrue(Files.exists(dir.resolve("minecraft_world/level.dat")));
+        assertTrue(Files.exists(dir.resolve("minecraft_world/region/r.0.0.mca")));
+        assertTrue(Files.size(dir.resolve("minecraft_world/region/r.0.0.mca")) > 8192L);
 
         String roads = new String(Files.readAllBytes(dir.resolve("roads.geojson")));
         String buildings = new String(Files.readAllBytes(dir.resolve("buildings.geojson")));

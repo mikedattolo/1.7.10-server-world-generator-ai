@@ -5,6 +5,7 @@ import com.mikedattolo.worldbuilder.model.CLIOptions;
 import com.mikedattolo.worldbuilder.model.GenerationPlan;
 import com.mikedattolo.worldbuilder.model.GenerationMode;
 import com.mikedattolo.worldbuilder.model.ProjectMetadata;
+import com.mikedattolo.worldbuilder.minecraft.MinecraftSaveInstaller;
 import com.mikedattolo.worldbuilder.prompt.PromptAssistant;
 
 import javax.swing.BorderFactory;
@@ -30,6 +31,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Locale;
 
 public class WorldBuilderGuiApp {
@@ -53,7 +55,9 @@ public class WorldBuilderGuiApp {
     private final JButton applyPresetButton;
     private final JButton previewButton;
     private final JButton openOutputButton;
+    private final JButton installWorldButton;
     private final JButton generateButton;
+    private Path lastGeneratedWorld;
 
     public WorldBuilderGuiApp() {
         frame = new JFrame("RealWorldMapBuilder GUI");
@@ -115,6 +119,8 @@ public class WorldBuilderGuiApp {
         previewButton.addActionListener(e -> previewPlan());
         openOutputButton = new JButton("Open Output Folder");
         openOutputButton.addActionListener(e -> openOutputFolder());
+        installWorldButton = new JButton("Install to Minecraft Saves");
+        installWorldButton.addActionListener(e -> installGeneratedWorld());
         generateButton = new JButton("Generate Project");
         generateButton.addActionListener(e -> generate());
 
@@ -129,6 +135,7 @@ public class WorldBuilderGuiApp {
         JPanel utilityActions = new JPanel(new BorderLayout(8, 0));
         utilityActions.add(applyPresetButton, BorderLayout.WEST);
         utilityActions.add(openOutputButton, BorderLayout.CENTER);
+        utilityActions.add(installWorldButton, BorderLayout.EAST);
         rightActions.add(utilityActions, BorderLayout.CENTER);
         actions.add(rightActions, BorderLayout.EAST);
 
@@ -169,6 +176,8 @@ public class WorldBuilderGuiApp {
         generate.addActionListener(e -> generate());
         JMenuItem openOutput = new JMenuItem("Open Output Folder");
         openOutput.addActionListener(e -> openOutputFolder());
+        JMenuItem installWorld = new JMenuItem("Install to Minecraft Saves");
+        installWorld.addActionListener(e -> installGeneratedWorld());
         JMenuItem applyPreset = new JMenuItem("Apply Selected Preset");
         applyPreset.addActionListener(e -> applySelectedPreset());
         JMenuItem exit = new JMenuItem("Exit");
@@ -184,6 +193,7 @@ public class WorldBuilderGuiApp {
         run.add(previewPlan);
         run.add(generate);
         run.add(openOutput);
+        run.add(installWorld);
         presets.add(applyPreset);
         file.add(exit);
         help.add(about);
@@ -195,7 +205,7 @@ public class WorldBuilderGuiApp {
     }
 
     private void selectAreaOnMap() {
-        String selectedBbox = BBoxMapSelector.choose(frame, bbox.getText().trim());
+        String selectedBbox = BrowserMapSelector.choose(frame, bbox.getText().trim());
         if (selectedBbox == null || selectedBbox.trim().isEmpty()) {
             return;
         }
@@ -284,7 +294,7 @@ public class WorldBuilderGuiApp {
                     "Step 6 of 6: Drag a rectangle on the map, then choose Use Selected Area.",
                     "Setup Wizard",
                     JOptionPane.INFORMATION_MESSAGE);
-            String chosenBbox = BBoxMapSelector.choose(frame, bbox.getText().trim());
+            String chosenBbox = BrowserMapSelector.choose(frame, bbox.getText().trim());
             if (chosenBbox == null || chosenBbox.trim().isEmpty()) {
                 return;
             }
@@ -373,6 +383,30 @@ public class WorldBuilderGuiApp {
         }
     }
 
+    private void installGeneratedWorld() {
+        Path worldDir = lastGeneratedWorld;
+        if (worldDir == null) {
+            String outPath = output.getText().trim();
+            if (!outPath.isEmpty()) {
+                worldDir = new File(outPath, "minecraft_world").toPath();
+            }
+        }
+        if (worldDir == null || !worldDir.toFile().exists()) {
+            JOptionPane.showMessageDialog(frame, "Generate a world before installing it.", "Install World", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        try {
+            Path installed = new MinecraftSaveInstaller().install(worldDir, projectName.getText());
+            appendStatus("Installed Minecraft save: " + installed);
+            JOptionPane.showMessageDialog(frame, "Installed Minecraft save:\n" + installed, "Install World", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(frame,
+                    "Could not install world: " + ex.getMessage(),
+                    "Install World",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     private void refreshModeFields() {
         boolean promptMode = "PROMPT".equals(String.valueOf(mode.getSelectedItem()));
         prompt.setEnabled(promptMode);
@@ -406,6 +440,8 @@ public class WorldBuilderGuiApp {
                     WorldBuilderService.GenerationResult result = get();
                     appendStatus("Project generated: " + result.metadata.projectName);
                     appendStatus("Output: " + result.outputPath);
+                    lastGeneratedWorld = result.outputPath.resolve("minecraft_world");
+                    appendStatus("Minecraft world: " + lastGeneratedWorld);
                     appendStatus("World size: " + result.metadata.worldSize + "x" + result.metadata.worldSize);
                     appendStatus("Theme: " + result.plan.theme + " Terrain: " + result.plan.terrain);
                     appendStatus("Structures: " + result.plan.structures.toString());

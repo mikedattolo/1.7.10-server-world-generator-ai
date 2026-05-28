@@ -1,5 +1,6 @@
 package com.mikedattolo.worldbuilder.export;
 
+import com.mikedattolo.worldbuilder.minecraft.MinecraftWorldExporter;
 import com.mikedattolo.worldbuilder.model.GenerationPlan;
 import com.mikedattolo.worldbuilder.model.ProjectMetadata;
 import com.mikedattolo.worldbuilder.util.JsonUtil;
@@ -20,6 +21,7 @@ public class ExportService {
         write(outputDir.resolve("water.geojson"), JsonUtil.syntheticWaterGeoJson(metadata, plan));
         write(outputDir.resolve("vegetation.geojson"), JsonUtil.syntheticVegetationGeoJson(metadata, plan));
         write(outputDir.resolve("landuse.geojson"), JsonUtil.syntheticLanduseGeoJson(metadata, plan));
+        new MinecraftWorldExporter().export(outputDir.resolve("minecraft_world"), metadata);
     }
 
     private void write(Path path, String content) throws IOException {

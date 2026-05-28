@@ -52,7 +52,13 @@ The GUI provides a menu-driven desktop workflow for switching between `PROMPT` a
 
 For first-time users, use the **Setup Wizard** button (or **Run > Setup Wizard**) to walk through a guided 6-step configuration with recommended defaults.
 
-For DEM mode, use **Select Area on Map** instead of typing coordinates. Drag a rectangle over the offline map, choose **Use Selected Area**, and the GUI fills the bbox field automatically. The selector does not require OpenStreetMap or any other online map service.
+For DEM mode, use **Select Area on Map** instead of typing coordinates. The app opens a real browser map with selectable map layers; drag a rectangle, then choose **Use Selected Area** in the GUI. If the browser map cannot open, the app falls back to an offline selector.
+
+Exports include both normalized builder artifacts and a first playable Minecraft 1.7.10 Anvil save at `minecraft_world/` with `level.dat` and `region/r.0.0.mca`.
+
+DEM world export attempts to sample real Terrarium elevation tiles for the selected bbox. If the elevation service is unavailable, generation falls back to deterministic terrain so export still completes.
+
+After generating, use **Install to Minecraft Saves** in the GUI to copy `minecraft_world/` into your local `.minecraft/saves` folder automatically.
 
 ## Easy Setup And Launch Scripts
 
